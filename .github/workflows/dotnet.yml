@@ -27,11 +27,17 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal --collect:"XPlat Code Coverage"
       working-directory: ./GithubActionsSample
-    - name: Install ReportGenerator
-      run: dotnet tool install -g dotnet-reportgenerator-globaltool  
-    - name: Generate Coverage Report
-      run: /root/.dotnet/tools/reportgenerator -reports:`find .  -type f -name "coverage.cobertura.xml"` -targetdir:"CoverageReport" -reporttypes:Html
-      working-directory: ./GithubActionsSample
+    - name: Find CoverageReport
+      run: |
+          report=`find . -type f -name "coverage.cobertura.xml"`
+          echo "::set-output name=CoverageReportPath::${report}"
+      id: FindReport
+    - name: ReportGenerator
+      uses: danielpalme/ReportGenerator-GitHub-Action@5.0.4
+      with:
+        reports: '${{ steps.FindReport.outputs.CoverageReportPath }}'
+        targetdir: 'CoverageReport'
+        reporttypes: 'Html'
     - name: Upload Coverage Report
       uses: actions/upload-artifact@v2
       with:
